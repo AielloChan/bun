@@ -1,7 +1,7 @@
 import { pathToFileURL } from "bun";
 import { expect, it, describe } from "bun:test";
 import { mkdirSync, writeFileSync } from "fs";
-import { bunEnv, bunExe, joinP, tempDirWithFiles } from "harness";
+import { bunEnv, bunExe, joinP, tempDirWithFiles, isWindows } from "harness";
 import { isWindows } from "../../node/test/common";
 import { join, sep } from "path";
 
@@ -386,4 +386,24 @@ describe("NODE_PATH test", () => {
     expect(exitCode).toBe(0);
     expect(stdout.toString().trim()).toBe("NODE_PATH from lib works");
   });
+});
+
+it.if(isWindows)("directory cache key computation", () => {
+  expect(import(`${process.cwd()}\\\\doesnotexist.ts`)).rejects.toThrow();
+  expect(import(`${process.cwd()}\\\\\\doesnotexist.ts`)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\doesnotexist.ts\\` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\doesnotexist.ts\\\\` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\doesnotexist.ts\\\\\\` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\\\doesnotexist.ts` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\\\\\doesnotexist.ts` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\doesnotexist.ts` as any)).rejects.toThrow();
+  expect(import(`\\\\\\Test\\doesnotexist.ts` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\\\doesnotexist.ts\\` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\\\\\doesnotexist.ts\\` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\doesnotexist.ts\\` as any)).rejects.toThrow();
+  expect(import(`\\\\\\Test\\doesnotexist.ts\\` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\\\doesnotexist.ts\\\\` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\\\\\\\doesnotexist.ts\\\\` as any)).rejects.toThrow();
+  expect(import(`\\\\Test\\doesnotexist.ts\\\\` as any)).rejects.toThrow();
+  expect(import(`\\\\\\Test\\doesnotexist.ts\\\\` as any)).rejects.toThrow();
 });
